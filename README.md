@@ -1,11 +1,13 @@
 # Projeto de aplicativo de receitas
-Esse e um projeto valendo nota da av2 do 3 período de programação mobile coding
+Projeto de app Mobile para usando React Native para a disciplina de Programação Mobile Coding
+Tema escolhido: App de Receitas
 
 
-#menbros e suas funções
-Gustavo Lucena Cortez
-Caio
-Wanderson
-Yan
-Gustavo
-Gabriel
+#Membros e seus funções
+
+Gustavo Lucena Cortez (Documentação)
+Caio (Teste)
+Wanderson (Front-End)
+Yan (Front-End)
+Gustavo Domingos (Back-End/Banco)
+Gabriel do Nascimento (UX/UI)
