@@ -11,3 +11,6 @@ Wanderson (Front-End)
 Yan (Front-End)
 Gustavo Domingos (Back-End/Banco)
 Gabriel do Nascimento (UX/UI)
+
+link pro github da versão com acessibilidade
+https://github.com/iastoan/Projeto-de-cria-o-de-aplicativo-de-agenda-com-acessibilidade
