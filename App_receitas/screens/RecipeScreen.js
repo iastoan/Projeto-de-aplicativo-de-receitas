@@ -4,52 +4,61 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
   ScrollView,
 } from 'react-native';
 
-export default function RecipeScreen() {
+export default function RecipeScreen({ route }) {
+
+  const receita = route?.params?.receita;
+
+  if (!receita) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.error}>
+          Receita não encontrada.
+        </Text>
+      </View>
+    );
+  }
+
   return (
 
     <ScrollView style={styles.container}>
 
-      <Image
-        source={require('../assets/photos/hamburguer.jpg')}
-        style={styles.image}
-      />
-
       <View style={styles.content}>
 
         <Text style={styles.title}>
-          Hambúrguer Artesanal
+          {receita.titulo}
         </Text>
 
         <Text style={styles.subtitle}>
-          Ingredientes
+          Descrição
         </Text>
 
         <Text style={styles.text}>
-          • 1 pão brioche{"\n"}
-          • 1 carne de hambúrguer{"\n"}
-          • queijo cheddar{"\n"}
-          • alface{"\n"}
-          • tomate{"\n"}
-          • molho especial
+          {receita.descricao}
         </Text>
 
         <Text style={styles.subtitle}>
-          Modo de preparo 
+          Tempo de preparo
         </Text>
 
         <Text style={styles.text}>
-          Grelhe a carne, monte o hambúrguer
-          e coloque bastante queijo porque
-          felicidade também é derivado de lactose.
+          {receita.tempo_preparo} minutos
+        </Text>
+
+        <Text style={styles.subtitle}>
+          Modo de preparo
+        </Text>
+
+        <Text style={styles.text}>
+          {receita.modo_preparo}
         </Text>
 
       </View>
 
     </ScrollView>
+
   );
 }
 
@@ -58,11 +67,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-
-  image: {
-    width: '100%',
-    height: 250,
   },
 
   content: {
@@ -86,6 +90,16 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 17,
     lineHeight: 28,
+  },
+
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  error: {
+    fontSize: 18,
   },
 
 });

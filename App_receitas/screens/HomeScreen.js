@@ -1,166 +1,271 @@
-import React from 'react';
-
+import React, { useCallback, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  Image,
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
-} from 'react-native';
+  Image,
+  ActivityIndicator,
+} from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 
-export default function HomeScreen({ navigation }) {
+const API = "http://10.148.190.138:3001";
+
+export default function HomeScreen({ navigation, usuarioId }) {
+  const [receitas, setReceitas] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  async function carregarReceitas() {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API}/receitas`);
+      const data = await response.json();
+      setReceitas(data);
+    } catch (err) {
+      console.log("ERRO AO CARREGAR:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function curtirReceita(id) {
+    try {
+      const response = await fetch(`${API}/receitas/${id}/curtir`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ usuarioId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message);
+        return;
+      }
+
+      carregarReceitas();
+    } catch (error) {
+      console.log("ERRO AO CURTIR:", error);
+    }
+  }
+
+  useFocusEffect(
+    useCallback(() => {
+      carregarReceitas();
+    }, [])
+  );
+
   return (
-
     <SafeAreaView style={styles.safeContainer}>
+      <ScrollView style={styles.container}>
+        <Text style={styles.title}>RECEITAS JÁ 🍝</Text>
 
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+        {loading && (
+          <ActivityIndicator size="large" color="#ff6600" style={styles.loader} />
+        )}
 
-        <Text style={styles.title}>
-          RECEITAS JÁ
-        </Text>
+        {!loading &&
+          receitas.map((receita) => {
+            // 🛠️ CORREÇÃO: Permite tanto links HTTP/HTTPS quanto imagens locais em Base64
+            const imageUri =
+              receita.image &&
+              (receita.image.startsWith("http") || receita.image.startsWith("data:image"))
+                ? receita.image
+                : null;
 
-        {/* CARD 1 */}
+            return (
+              <View key={receita.id} style={styles.card}>
+                {imageUri ? (
+                  <Image source={{ uri: imageUri }} style={styles.image} />
+                ) : (
+                  <View style={styles.noImagePlaceholder}>
+                    <Text style={styles.noImageText}>Sem Imagem</Text>
+                  </View>
+                )}
 
-        <View style={styles.card}>
+                <View style={styles.cardContent}>
+                  {/* Trata a diferença entre o que foi salvo no banco (titulo ou title) */}
+                  <Text style={styles.recipeTitle}>
+                    {receita.titulo || receita.title}
+                  </Text>
 
-          <Image
-            source={require('../assets/photos/hamburguer.jpg')}
-            style={styles.image}
-            resizeMode="cover"
-          />
+                  <Text style={styles.author}>
+                    Por {receita.nome_usuario || "Anônimo"}
+                  </Text>
 
-          <View style={styles.cardContent}>
+                  <Text style={styles.category}>
+                    📂 {receita.categoria || "Sem categoria"}
+                  </Text>
 
-            <Text style={styles.recipeTitle}>
-              Hambúrguer Artesanal
-            </Text>
+                  <Text style={styles.recipeDescription}>
+                    {receita.descricao || receita.description}
+                  </Text>
 
-            <Text style={styles.recipeDescription}>
-              melhor que o BIG MAC
-            </Text>
+                  <Text style={styles.time}>
+                    ⏱ {receita.tempo_preparo || receita.tempoPreparo} min
+                  </Text>
 
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => navigation.navigate('Recipe')}
-            >
-              <Text style={styles.buttonText}>
-                Ver Receita
-              </Text>
-            </TouchableOpacity>
+                  <Text style={styles.likes}>
+                    ❤️ {receita.curtidas || 0}
+                  </Text>
 
-          </View>
+                  <TouchableOpacity
+                    style={styles.likeButton}
+                    onPress={() => curtirReceita(receita.id)}
+                  >
+                    <Text style={styles.likeText}>❤️ Curtir</Text>
+                  </TouchableOpacity>
 
-        </View>
-
-        {/* CARD 2 */}
-
-        <View style={styles.card}>
-
-          <Image
-            source={require('../assets/photos/Pizza-de-calabresa.jpg')}
-            style={styles.image}
-            resizeMode="cover"
-          />
-
-          <View style={styles.cardContent}>
-
-            <Text style={styles.recipeTitle}>
-              Pizza Caseira
-            </Text>
-
-            <Text style={styles.recipeDescription}>
-              massa italiana que nao pode colocar ketchup perto deles
-            </Text>
-
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => navigation.navigate('Recipe')}
-            >
-              <Text style={styles.buttonText}>
-                Ver Receita
-              </Text>
-            </TouchableOpacity>
-
-          </View>
-
-        </View>
-
+                  <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => navigation.navigate("Recipe", { receita })}
+                  >
+                    <Text style={styles.buttonText}>Ver Receita</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            );
+          })}
       </ScrollView>
 
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => navigation.navigate("AddRecipe", { usuarioId })}
+      >
+        <Text style={styles.plus}>+</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
 
+// ==================== ESTILOS ====================
 const styles = StyleSheet.create({
-
   safeContainer: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
-
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    paddingHorizontal: 25,
+    paddingHorizontal: 20,
   },
-
-  scrollContent: {
-    paddingTop: 25,
-    paddingBottom: 120,
-  },
-
   title: {
-    fontSize: 40,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 20,
-    color: '#ff6600',
+    fontSize: 32,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginVertical: 20,
+    color: "#ff6600",
   },
-
+  loader: {
+    marginTop: 50,
+  },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    overflow: 'hidden',
+    backgroundColor: "#fff",
     marginBottom: 25,
-    elevation: 5,
+    borderRadius: 15,
+    overflow: "hidden",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-
   image: {
-    width: '100%',
+    width: "100%",
     height: 200,
+    resizeMode: "cover",
   },
-
+  noImagePlaceholder: {
+    width: "100%",
+    height: 200,
+    backgroundColor: "#e0e0e0",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  noImageText: {
+    color: "#888",
+    fontSize: 16,
+  },
   cardContent: {
     padding: 15,
   },
-
   recipeTitle: {
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 2,
+  },
+  author: {
+    fontSize: 14,
+    color: "#888",
+    marginBottom: 6,
+  },
+  category: {
+    fontSize: 13,
+    color: "#ff6600",
+    fontWeight: "bold",
     marginBottom: 10,
   },
-
   recipeDescription: {
-    color: '#777',
+    color: "#666",
+    fontSize: 15,
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  time: {
+    fontWeight: "bold",
+    color: "#444",
+    marginBottom: 4,
+  },
+  likes: {
+    fontWeight: "bold",
+    color: "#444",
     marginBottom: 15,
   },
-
+  likeButton: {
+    backgroundColor: "#ffd6d6",
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  likeText: {
+    textAlign: "center",
+    fontWeight: "bold",
+    color: "#cc0000",
+  },
   button: {
-    backgroundColor: '#ff6600',
+    backgroundColor: "#ff6600",
     padding: 12,
     borderRadius: 10,
   },
-
   buttonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: 'bold',
+    color: "#fff",
+    textAlign: "center",
+    fontWeight: "bold",
+    fontSize: 16,
   },
-
+  fab: {
+    position: "absolute",
+    bottom: 25,
+    right: 25,
+    backgroundColor: "#ff6600",
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  plus: {
+    fontSize: 30,
+    color: "#fff",
+    fontWeight: "bold",
+  },
 });

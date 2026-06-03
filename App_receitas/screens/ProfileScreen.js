@@ -1,221 +1,216 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from "react";
 
 import {
   View,
   Text,
   StyleSheet,
-  Image,
+  TextInput,
   TouchableOpacity,
   ScrollView,
-  TextInput,
-} from 'react-native';
+  Image,
+} from "react-native";
 
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
 
-export default function ProfileScreen({ route }) {
+export default function ProfileScreen({ usuarioId, userName, theme }) {
 
-  const { userName } = route.params;
+  const [bio, setBio] = useState("Clique no lápis para editar sua bio");
+  const [editing, setEditing] = useState(false);
+  const [receitas, setReceitas] = useState([]);
 
-  const [bio, setBio] = useState(
-    'Clique no lápis para editar sua bio'
-  );
+  // ==================== CARREGAR RECEITAS ====================
+  function carregarReceitas() {
+    fetch("http://10.148.190.138:3001/receitas")
+      .then(res => res.json())
+      .then(data => setReceitas(data))
+      .catch(err => console.log("ERRO:", err));
+  }
 
-  const [editingBio, setEditingBio] = useState(false);
+  useEffect(() => {
+    carregarReceitas();
+  }, []);
+
+  // ==================== FILTRAR DO USUÁRIO ====================
+  const minhasReceitas = receitas.filter((item) => {
+    return (
+      item.usuario_id === usuarioId ||
+      item.usuarioId === usuarioId
+    );
+  });
+
+  const isDark = theme === "dark";
 
   return (
+    <ScrollView style={[
+      styles.container,
+      { backgroundColor: isDark ? "#111" : "#f5f5f5" }
+    ]}>
 
-    <ScrollView style={styles.container}>
-
+      {/* PERFIL */}
       <View style={styles.header}>
 
-        <Image
-          source={{
-            uri: 'foto_de_perfil_vazia.jpg',
-          }}
-          style={styles.profileImage}
-        />
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>
+            {userName?.charAt(0)?.toUpperCase()}
+          </Text>
+        </View>
 
-        <Text style={styles.name}>
+        <Text style={[
+          styles.name,
+          { color: isDark ? "#fff" : "#000" }
+        ]}>
           {userName}
         </Text>
 
-        {/* BIO */}
+        <View style={styles.bioBox}>
 
-        <View style={styles.bioContainer}>
-
-          {editingBio ? (
-
+          {editing ? (
             <TextInput
               value={bio}
               onChangeText={setBio}
-              style={styles.bioInput}
-              multiline={true}
+              style={styles.input}
             />
-
           ) : (
-
-            <Text style={styles.bio}>
+            <Text style={[
+              styles.bio,
+              { color: isDark ? "#ccc" : "gray" }
+            ]}>
               {bio}
             </Text>
-
           )}
 
-          {/* BOTÃO LÁPIS */}
-
-          <TouchableOpacity
-            onPress={() =>
-              setEditingBio(!editingBio)
-            }
-          >
-
-            <Ionicons
-              name="pencil"
-              size={24}
-              color="#ff6600"
-            />
-
+          <TouchableOpacity onPress={() => setEditing(!editing)}>
+            <Ionicons name="pencil" size={22} color="#ff6600" />
           </TouchableOpacity>
 
         </View>
 
       </View>
 
-      {/* BOTÃO + */}
-
-      <TouchableOpacity style={styles.addButton}>
-
-        <Ionicons
-          name="add"
-          size={35}
-          color="#fff"
-        />
-
-      </TouchableOpacity>
-
-      <Text style={styles.sectionTitle}>
+      {/* TÍTULO */}
+      <Text style={[
+        styles.title,
+        { color: isDark ? "#fff" : "#000" }
+      ]}>
         Minhas Receitas
       </Text>
 
-      {/* RECEITA 1 */}
-
-      <View style={styles.recipeCard}>
-
-        <Image
-          source={require('../assets/photos/hamburguer.jpg')}
-          style={styles.recipeImage}
-        />
-
-        <Text style={styles.recipeTitle}>
-          Hambúrguer Artesanal
+      {/* LISTA */}
+      {minhasReceitas.length === 0 ? (
+        <Text style={{ textAlign: "center", color: "gray", marginTop: 20 }}>
+          Nenhuma receita encontrada 😅
         </Text>
+      ) : (
+        minhasReceitas.map((item) => (
+          <View key={item.id} style={styles.card}>
 
-      </View>
+            {item.image && (
+              <Image
+                source={{ uri: item.image }}
+                style={styles.image}
+              />
+            )}
 
-      {/* RECEITA 2 */}
+            <Text style={styles.recipeTitle}>
+              {item.titulo}
+            </Text>
 
-      <View style={styles.recipeCard}>
+            <Text style={styles.desc}>
+              {item.descricao}
+            </Text>
 
-        <Image
-          source={require('../assets/photos/Pizza-de-calabresa.jpg')}
-          style={styles.recipeImage}
-        />
-
-        <Text style={styles.recipeTitle}>
-          Pizza Caseira
-        </Text>
-
-      </View>
+          </View>
+        ))
+      )}
 
     </ScrollView>
   );
 }
 
+// ==================== CSS ====================
 const styles = StyleSheet.create({
 
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
 
   header: {
-    alignItems: 'center',
-    marginTop: 40,
-    marginBottom: 30,
+    alignItems: "center",
+    marginTop: 60,
+    marginBottom: 20,
   },
 
-  profileImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+  avatar: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: "#ff6600",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  avatarText: {
+    fontSize: 40,
+    color: "#fff",
+    fontWeight: "bold",
   },
 
   name: {
-    fontSize: 30,
-    fontWeight: 'bold',
+    fontSize: 26,
+    fontWeight: "bold",
     marginTop: 15,
-    marginBottom: 15,
   },
 
-  bioContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  bioBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 15,
     paddingHorizontal: 20,
   },
 
   bio: {
-    fontSize: 18,
-    color: 'gray',
     marginRight: 10,
-    textAlign: 'center',
+    textAlign: "center",
   },
 
-  bioInput: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
+  input: {
+    backgroundColor: "#fff",
     padding: 10,
+    borderRadius: 10,
     width: 250,
     marginRight: 10,
   },
 
-  addButton: {
-    backgroundColor: '#ff6600',
-    width: 75,
-    height: 75,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    alignSelf: 'center',
-    marginBottom: 30,
-    elevation: 5,
-  },
-
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  title: {
+    fontSize: 22,
+    fontWeight: "bold",
     marginLeft: 20,
-    marginBottom: 20,
+    marginBottom: 10,
   },
 
-  recipeCard: {
-    backgroundColor: '#fff',
+  card: {
+    backgroundColor: "#fff",
     marginHorizontal: 20,
-    borderRadius: 20,
-    marginBottom: 20,
-    overflow: 'hidden',
-    elevation: 4,
+    marginBottom: 15,
+    borderRadius: 15,
+    overflow: "hidden",
+    elevation: 3,
   },
 
-  recipeImage: {
-    width: '100%',
+  image: {
+    width: "100%",
     height: 180,
   },
 
   recipeTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    padding: 15,
+    fontSize: 18,
+    fontWeight: "bold",
+    padding: 10,
   },
 
+  desc: {
+    paddingHorizontal: 10,
+    paddingBottom: 10,
+    color: "#666",
+  },
 });

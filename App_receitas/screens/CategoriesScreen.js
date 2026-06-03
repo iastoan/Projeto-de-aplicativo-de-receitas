@@ -14,100 +14,75 @@ import { Ionicons } from "@expo/vector-icons";
 export default function CategoriesScreen({ navigation }) {
 
   const categorias = [
-
     {
       nome: "Massas",
       imagem: require("../assets/photos/macarrao.jpg"),
     },
-
     {
       nome: "Bebidas",
       imagem: require("../assets/photos/sucos.jpg"),
     },
-
     {
       nome: "Doces e sobremesas",
       imagem: require("../assets/photos/pudim.jpeg"),
     },
-
     {
       nome: "Fitness",
       imagem: require("../assets/photos/macarrao-fitness.jpg"),
     },
-
     {
       nome: "Carnes",
       imagem: require("../assets/photos/carne.jpg"),
     },
-
   ];
 
-  return (
+  function abrirCategoria(nome) {
+    navigation.navigate("CategoryRecipes", {
+      categoria: nome,
+    });
+  }
 
+  return (
     <View style={styles.container}>
 
-      {/* TOPO */}
-
+      {/* HEADER */}
       <View style={styles.header}>
-
-        <Ionicons
-          name="fast-food"
-          size={50}
-          color="#ff8800"
-        />
+        <Ionicons name="fast-food" size={50} color="#ff8800" />
 
         <Text style={styles.logo}>
           ReceitasJá
         </Text>
-
       </View>
 
-      {/* CATEGORIAS */}
-
+      {/* LISTA */}
       <ScrollView showsVerticalScrollIndicator={false}>
-
         {categorias.map((item, index) => (
-
           <TouchableOpacity
             key={index}
             style={styles.card}
-
-            onPress={() =>
-              navigation.navigate(
-                "CategoryRecipes",
-                {
-                  categoria: item.nome,
-                }
-              )
-            }
+            activeOpacity={0.85}
+            onPress={() => abrirCategoria(item.nome)}
           >
-
             <ImageBackground
               source={item.imagem}
               style={styles.image}
               imageStyle={styles.imageRadius}
             >
-
               <View style={styles.overlay}>
-
                 <Text style={styles.cardText}>
                   {item.nome}
                 </Text>
-
               </View>
-
             </ImageBackground>
-
           </TouchableOpacity>
-
         ))}
-
       </ScrollView>
 
     </View>
   );
 }
 
+// ==================== CSS ====================
 const styles = StyleSheet.create({
 
   container: {
@@ -119,13 +94,10 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 20,
     paddingHorizontal: 20,
-
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-
+    justifyContent: "center",
     backgroundColor: "#fff",
-
     elevation: 5,
   },
 
@@ -133,6 +105,7 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: "bold",
     color: "#ff8800",
+    marginLeft: 10,
   },
 
   card: {
@@ -153,7 +126,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.25)",
     borderRadius: 25,
-
     justifyContent: "center",
     alignItems: "center",
   },
@@ -163,5 +135,4 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "bold",
   },
-
 });

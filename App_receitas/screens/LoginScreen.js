@@ -1,73 +1,113 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 import {
   View,
   Text,
-  StyleSheet,
   TextInput,
   TouchableOpacity,
-} from 'react-native';
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 
 export default function LoginScreen({ navigation }) {
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleLogin() {
+
+    if (!email || !password) {
+      Alert.alert("Erro", "Preencha email e senha");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+
+      const response = await fetch("http://10.148.190.138:3001/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        Alert.alert("Erro", data.message || "Login inválido");
+        return;
+      }
+
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: "Tabs",
+            params: {
+              usuarioId: data.id,
+              userName: data.nome,
+            },
+          },
+        ],
+      });
+
+    } catch (error) {
+      console.log(error);
+      Alert.alert("Erro", "Não foi possível conectar ao servidor.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
-
     <View style={styles.container}>
 
-      <Text style={styles.title}>
-        app de receitas
-      </Text>
-
-      <Text style={styles.subtitle}>
-        Entre na sua conta
-      </Text>
+      <Text style={styles.title}>🍝 ReceitasJÁ</Text>
 
       <TextInput
-        placeholder="nome de usuario"
-        value={name}
-        onChangeText={setName}
-        style={styles.input}
-      />
-
-      <TextInput
-        placeholder="Digite seu email"
+        placeholder="Email"
         value={email}
         onChangeText={setEmail}
         style={styles.input}
+        autoCapitalize="none"
+        placeholderTextColor="#999"
       />
 
       <TextInput
-        placeholder="Digite sua senha"
+        placeholder="Senha"
         value={password}
         onChangeText={setPassword}
-        secureTextEntry={true}
+        secureTextEntry
         style={styles.input}
+        placeholderTextColor="#999"
       />
 
+      {/* BOTÃO LOGIN */}
       <TouchableOpacity
-
         style={styles.button}
-
-        onPress={() =>
-          navigation.navigate('Profile', {
-            userName: name,
-          })
-        }
+        onPress={handleLogin}
+        disabled={loading}
       >
-
-        <Text style={styles.buttonText}>
-          Entrar
-        </Text>
-
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Entrar</Text>
+        )}
       </TouchableOpacity>
 
-      <Text style={styles.registerText}>
-        Não possui conta? Cadastre-se
-      </Text>
+      {/* BOTÃO CADASTRO */}
+      <TouchableOpacity
+        onPress={() => navigation.navigate("Cadastro")}
+        style={styles.cadastroButton}
+      >
+        <Text style={styles.cadastroText}>
+          Não tem conta? Criar agora
+        </Text>
+      </TouchableOpacity>
 
     </View>
   );
@@ -77,55 +117,49 @@ const styles = StyleSheet.create({
 
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: 25,
+    backgroundColor: "#f5f5f5",
   },
 
   title: {
-    fontSize: 45,
-    fontWeight: 'bold',
-    color: '#ff6600',
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-
-  subtitle: {
-    fontSize: 22,
-    color: 'gray',
-    textAlign: 'center',
-    marginBottom: 40,
+    fontSize: 35,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 30,
+    color: "#ff6600",
   },
 
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
+    padding: 15,
+    marginBottom: 15,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 15,
-    padding: 18,
-    marginBottom: 20,
-    fontSize: 18,
+    borderColor: "#ddd",
   },
 
   button: {
-    backgroundColor: '#ff6600',
-    padding: 18,
-    borderRadius: 15,
+    backgroundColor: "#ff6600",
+    padding: 15,
+    borderRadius: 10,
     marginTop: 10,
+    alignItems: "center",
   },
 
   buttonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontSize: 24,
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 
-  registerText: {
-    textAlign: 'center',
-    color: 'gray',
-    marginTop: 30,
-    fontSize: 18,
+  cadastroButton: {
+    marginTop: 20,
   },
 
+  cadastroText: {
+    textAlign: "center",
+    color: "#ff6600",
+    fontWeight: "bold",
+  },
 });
